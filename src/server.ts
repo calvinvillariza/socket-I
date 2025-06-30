@@ -1,10 +1,14 @@
 import express from "express";
 import { WebSocketServer } from "ws";
 import redisClient from "./redisClient";
-import { Message } from "./types/message";
+import dotenv from "dotenv";
+import { env } from "process";
+import { GetRequest, Message } from "./types";
+
+dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = env.API_PORT;
 
 app.get("/", (_req, res) => {
     res.send("socket-I is running!");
@@ -19,8 +23,11 @@ const wss = new WebSocketServer({
     server
 });
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req: GetRequest<{ token: string }>) => {
+    const { token } = req.headers;
+
     console.log('Client wss connected');
+    console.log('TODO:: authenticate', token);
 
     redisClient.lRange('message_history', 0, -1)
         .then(

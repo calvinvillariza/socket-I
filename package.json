@@ -11,6 +11,7 @@
   "author": "John Calvin Villariza",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.0.0",
     "express": "^4.21.2",
     "redis": "^4.7.1",
     "we": "^1.5.10",
