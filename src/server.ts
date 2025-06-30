@@ -6,7 +6,7 @@ import { Message } from "./types/message";
 const app = express();
 const port = 3000;
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
     res.send("socket-I is running!");
 });
 
