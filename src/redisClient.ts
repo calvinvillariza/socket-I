@@ -1,6 +1,6 @@
-import { createClient } from 'redis';
+import { RedisClientType, createClient } from 'redis';
 
-const client = createClient({
+const client: RedisClientType = createClient({
     url: 'redis://localhost:6060',
 });
 
