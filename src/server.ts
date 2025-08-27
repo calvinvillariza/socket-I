@@ -1,9 +1,11 @@
 import express from "express";
-import { WebSocketServer } from "ws";
-import redisClient from "./redisClient";
 import dotenv from "dotenv";
 import { env } from "process";
-import { GetRequest, Message } from "./types";
+import { Server } from "http";
+import { Response } from 'express';
+import { loadMessage } from "./messageBasic/message";
+import { auth, token } from "./helpers/auth";
+import { GetRequest } from "./types";
 
 dotenv.config();
 
@@ -14,54 +16,23 @@ app.get("/", (_req, res) => {
     res.send("socket-I is running!");
 });
 
-const server = app.listen(port, () => {
+const server: Server = app.listen(port, () => {
     console.log(`socket-I is running at http://localhost:${port}`);
 });
 
+const router = express.Router();
 
-const wss = new WebSocketServer({
-    server
+router.get("/token", (_req, res) => {
+    res.status(200);
+    res.send(token);
+});
+router.get("/auth/check", auth, async (_req: GetRequest, res: Response): Promise<void> => {
+    res.status(200);
+    res.send('OK');
 });
 
-wss.on('connection', (ws, req: GetRequest<{ token: string }>) => {
-    const { token } = req.headers;
+app.use("/api", router);
 
-    console.log('Client wss connected');
-    console.log('TODO:: authenticate', token);
-
-    redisClient.lRange('message_history', 0, -1)
-        .then(
-            (messages) => {
-                messages.forEach((message) => {
-                    ws.send(message);
-                });
-            },
-            (error) => {
-                console.error('Error fetching messages from Redis:', error);
-                return;
-            }
-        );
-
-    ws.on('message', (data) => {
-        const message: Message = JSON.parse(data.toString());
-
-        message.timestamp = new Date().toISOString();
-
-        const messageString = JSON.stringify(message);
-
-        redisClient.rPush('message_history', messageString);
-        redisClient.lTrim('message_history', -100, -1)
-
-        wss.clients.forEach((client) => {
-            if (client.readyState === client.OPEN) {
-                client.send(messageString);
-            }
-        });
-    });
-
-    ws.on('close', () => {
-        console.log('Client wss disconnected');
-    });
-});
+loadMessage(server);
 
 console.log(`socket-I is running at ws://localhost:${port}`);

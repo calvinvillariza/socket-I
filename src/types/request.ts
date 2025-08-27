@@ -1,3 +1,3 @@
 import { Request } from 'express';
 
-export type GetRequest<T> = Request & T;
+export type GetRequest = Request & { token?: string };
